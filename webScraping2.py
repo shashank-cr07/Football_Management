@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 database = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="shambo",
+    password="******",
     database="football_management"  # Update with your database name
 )
 cursor = database.cursor()
