@@ -16,7 +16,7 @@ database = mysql.connector.connect(
     password="shambo",
     database="football_management"  # Update with your database name
 )
-cursor = database.cursor()
+cursor = database.cursor(buffered=True)
 
 class Standing:
     def __init__(self,leagueId,clubId,pos,wins,losses,draws,scored,conceded, difference,points):
@@ -279,9 +279,10 @@ def insertIntoMatchAppearances(date,teams,score,row):
                 home_lineup = tables[2]     #finding all the home team players
                 #print(home_lineup)
                 away_lineup = tables[3]  
-                rows = home_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")
+                home_rows = home_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")
+                away_rows = away_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")
                 #print("Home lineup is:",rows)
-                for row in rows:
+                for row in home_rows:
                     cursor.execute(
                         "SELECT Match_ID FROM matches ORDER BY Match_ID DESC LIMIT 1"
                     )
@@ -293,11 +294,35 @@ def insertIntoMatchAppearances(date,teams,score,row):
                         "SELECT Player_ID,position from player WHERE Player_Name = %s",(cleaned_player_name,)
                     )    
                     (id,pos) = cursor.fetchone()
+                    print("Player ID is:",id,"Player position is:",pos)
+
                     cursor.execute(
                         "INSERT INTO match_appearance (Date, Match_ID, Player_ID, Position) VALUES (%s,%s,%s,%s)",
                         (date,matchID,id,pos)
                     )
                     database.commit()
+                
+                for row in away_rows:
+                    cursor.execute(
+                        "SELECT Match_ID FROM matches ORDER BY Match_ID DESC LIMIT 1"
+                    )
+                    matchID = cursor.fetchone()[0]
+                    playerName = row.text.strip()
+                    cleaned_player_name = re.sub(r"\s\(\d+\)", "", playerName)
+                    print(cleaned_player_name)
+                    cursor.execute(
+                        "SELECT Player_ID,position from player WHERE Player_Name = %s",(cleaned_player_name,)
+                    )    
+                    (id,pos) = cursor.fetchone()
+                    print("Player ID is:",id,"Player position is:",pos)
+
+                    cursor.execute(
+                        "INSERT INTO match_appearance (Date, Match_ID, Player_ID, Position) VALUES (%s,%s,%s,%s)",
+                        (date,matchID,id,pos)
+                    ) 
+                    database.commit()
+
+
 
 def convertStandings(name):                     #converts the name from the standing table into the universal format fo the matches
     cursor.execute(
@@ -313,20 +338,26 @@ def convertStandings(name):                     #converts the name from the stan
 # Fetch HTML content from the website
 r = requests.get('https://native-stats.org/competition/PD/')
 soup = BeautifulSoup(r.content, 'html.parser')
+try:
+    driver = uc.Chrome()  # or webdriver.Firefox(), depending on the browser you're using
 
-driver = uc.Chrome()  # or webdriver.Firefox(), depending on the browser you're using
-
-# Open the website
-driver.get("https://footystats.org/spain/la-liga")
+    # Open the website
+    driver.get("https://footystats.org/spain/la-liga")
 
 
-time.sleep(3)
+    time.sleep(3)
 
-# Get the page source after JavaScript has rendered
-page_html = driver.page_source
+    # Get the page source after JavaScript has rendered
+    page_html = driver.page_source
 
-# Parse with BeautifulSoup
-funcSoup = BeautifulSoup(page_html, 'html.parser')
+    # Parse with BeautifulSoup
+    funcSoup = BeautifulSoup(page_html, 'html.parser')
+
+finally:
+    if driver is not None:
+        driver.quit()
+    else:
+        pass
 
 id = 0
 tables = soup.find_all("table", class_="table table-xs")  # gets all tables; third is the standings table
@@ -439,6 +470,6 @@ else:
 
 # Extract standings from the website
 # Close cursor and database connection after all operations
-driver.quit()
+
 cursor.close()
 database.close()
