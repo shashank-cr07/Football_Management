@@ -9,6 +9,7 @@ import html
 import time
 from html import unescape
 import undetected_chromedriver as uc
+import random
 
 database = mysql.connector.connect(
     host="localhost",
@@ -243,10 +244,26 @@ def insertIntoPlayer(name,id):
             playerName = cells[0].text.strip()
             position = cells[1].text.strip()
             cursor.execute(
-                "INSERT INTO player (Player_name, Position, Current_Club_ID) VALUES (%s,%s,%s)",
-                (playerName, position, id)
+                "INSERT INTO player (Player_name, Position, Current_Club_ID, Player_Valuation) VALUES (%s,%s,%s,%s)",
+                (playerName, position, id,round(random.randrange(5000000,10000000),2))
             )
             database.commit()
+
+def getPlayerValuation(name,end_url):
+    player_page = requests.get(f"https://native-stats.org{end_url}")
+    player_soup = BeautifulSoup(player_page.content, 'html.parser')
+
+    toptable = player_soup.find_all("div",class_ = "mt-6 border-t border-gray-100")
+    for row in toptable:
+        element = row.find_all("dd",class_ = "mt-1 text-sm leading-6 text-gray-300 sm:col-span-2 sm:mt-0")
+        # print(element)
+        value = element[5]
+        value = value.text.strip()[:-7]
+        print(value)
+        if (value == "n/a"):
+            return None
+        else:
+            return float(value)*1000000
 
 def insertIntoMatchAppearances(date,teams,score,row):
     if len(teams) == 2 and score:
@@ -279,23 +296,38 @@ def insertIntoMatchAppearances(date,teams,score,row):
                 home_lineup = tables[2]     #finding all the home team players
                 #print(home_lineup)
                 away_lineup = tables[3]  
-                home_rows = home_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")
+                home_rows = home_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")                
                 away_rows = away_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")
                 #print("Home lineup is:",rows)
                 for row in home_rows:
+                    #print(row)
+                    if ("phx-click" in row.attrs):
+                        home_phx_link = row.get('phx-click')
+                        try:
+                            homeData = json.loads(home_phx_link.replace('&quot;',""))
+                            player_url = homeData[0][1]['href']
+                        except (json.JSONDecodeError, IndexError, KeyError):
+                            player_url = None
+                            print("Error in finding the player url")
+                    
                     cursor.execute(
                         "SELECT Match_ID FROM matches ORDER BY Match_ID DESC LIMIT 1"
                     )
                     matchID = cursor.fetchone()[0]
                     playerName = row.text.strip()
                     cleaned_player_name = re.sub(r"\s\(\d+\)", "", playerName)
+                    value = getPlayerValuation(cleaned_player_name,player_url)    
+                    
                     print(cleaned_player_name)
                     cursor.execute(
                         "SELECT Player_ID,position from player WHERE Player_Name = %s",(cleaned_player_name,)
                     )    
                     (id,pos) = cursor.fetchone()
                     print("Player ID is:",id,"Player position is:",pos)
-
+                    
+                    cursor.execute(
+                        "UPDATE player SET Player_Valuation = %s where player_ID = %s",(value,id)
+                    )
                     cursor.execute(
                         "INSERT INTO match_appearance (Date, Match_ID, Player_ID, Position) VALUES (%s,%s,%s,%s)",
                         (date,matchID,id,pos)
@@ -303,6 +335,15 @@ def insertIntoMatchAppearances(date,teams,score,row):
                     database.commit()
                 
                 for row in away_rows:
+                    if ("phx-click" in row.attrs):
+                        away_phx_link = row.get('phx-click')
+                        try:
+                            awayData = json.loads(away_phx_link.replace('&quot;',""))
+                            player_url = awayData[0][1]['href']
+                        except (json.JSONDecodeError, IndexError, KeyError):
+                            player_url = None
+                            print("Error in finding the player url")
+                    
                     cursor.execute(
                         "SELECT Match_ID FROM matches ORDER BY Match_ID DESC LIMIT 1"
                     )
@@ -310,14 +351,18 @@ def insertIntoMatchAppearances(date,teams,score,row):
                     playerName = row.text.strip()
                     cleaned_player_name = re.sub(r"\s\(\d+\)", "", playerName)
                     print(cleaned_player_name)
+                    value = getPlayerValuation(cleaned_player_name,player_url)
                     cursor.execute(
                         "SELECT Player_ID,position from player WHERE Player_Name = %s",(cleaned_player_name,)
                     )    
                     (id,pos) = cursor.fetchone()
                     print("Player ID is:",id,"Player position is:",pos)
+                    cursor.execute(
+                        "UPDATE player SET Player_Valuation = %s where player_ID = %s",(value,id)
+                    )
 
                     cursor.execute(
-                        "INSERT INTO match_appearance (Date, Match_ID, Player_ID, Position) VALUES (%s,%s,%s,%s)",
+                        "INSERT INTO match_appearance (Date, Match_ID, Player_ID, Position) VALUES ( %s,%s,%s,%s)",
                         (date,matchID,id,pos)
                     ) 
                     database.commit()
