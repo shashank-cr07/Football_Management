@@ -72,10 +72,16 @@ def insert_into_matches(match_event,score):
     
     print(home_id,away_id,league_id)
     # Insert match record
-    cursor.execute(
+    if (score == None):
+            cursor.execute(
         "INSERT INTO matches (Home_club_ID, Away_club_ID,League_ID,Date, Time, Goals_scored, Goals_conceded) VALUES (%s, %s,%s,%s,%s,%s,%s)",
-        (home_id, away_id, league_id,match_event.match_date,match_event.match_date[11:],match_score[0],match_score[2])
-    )
+        (home_id, away_id, league_id,match_event.match_date,match_event.match_date[11:],None,None)
+            )
+    else:
+        cursor.execute(
+            "INSERT INTO matches (Home_club_ID, Away_club_ID,League_ID,Date, Time, Goals_scored, Goals_conceded) VALUES (%s, %s,%s,%s,%s,%s,%s)",
+            (home_id, away_id, league_id,match_event.match_date,match_event.match_date[11:],match_score[0],match_score[2])
+        )
     database.commit()
     print("Match inserted successfully.")
 
@@ -295,7 +301,9 @@ def insertIntoMatchAppearances(date,teams,score,row):
                 #print(tables[2])
                 home_lineup = tables[2]     #finding all the home team players
                 #print(home_lineup)
-                away_lineup = tables[3]  
+                home_bench = tables[3]
+                away_lineup = tables[4]
+                away_bench = tables[5]  
                 home_rows = home_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")                
                 away_rows = away_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")
                 #print("Home lineup is:",rows)
@@ -509,7 +517,7 @@ if next_matches_section:
             print(f"{next_home_team} vs {next_away_team} on {formatted_date}")
             next_match = Schedule(next_home_team, next_away_team, formatted_date)
             # Uncomment to enable database insertion
-            # insert_into_match_appearances(next_match)
+            insert_into_matches(next_match,None)
 else:
     print("No upcoming matches found.")
 
