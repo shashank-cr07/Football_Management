@@ -1,10 +1,5 @@
 import mysql.connector
 import requests
-from bs4 import BeautifulSoup
-
-database = mysql.connector.connect(
-    host="localhost",import mysql.connector
-import requests
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import datetime
@@ -220,22 +215,12 @@ def insert_into_match_events(teams,score,row):
                     matchID = cursor.fetchone()[0]
                     # Insert event into database (customize to match your table schema)
                     cursor.execute(
-                            "SELECT * FROM match_events WHERE Match_ID = %s AND Player_ID = %s AND Min_Occured = %s AND description = %s",
-                            (matchID, eventPlayerID, eventTime, eventOffense)
-                        )
-                    existing_event = cursor.fetchone()
-                    
-                    print(existing_event)
-                        # If no existing event is found, insert it
-                    if not existing_event:
-                        cursor.execute(
-                            "INSERT INTO match_events (Match_ID, Player_ID, Min_Occured, description) VALUES (%s, %s, %s, %s)",
-                            (matchID, eventPlayerID, eventTime, eventOffense)
-                        )
-                        database.commit()
-                        print(f"Event '{eventOffense}' for player '{eventName}' at minute '{eventTime}' added successfully.")
-                    else:
-                        print(f"Event for player '{eventName}' at minute '{eventTime}' already exists. Skipping insertion.")
+                        "INSERT INTO match_events (Match_ID, Player_ID, Min_Occured, description) VALUES (%s, %s, %s, %s)",
+                        (matchID, eventPlayerID, eventTime, eventOffense)
+                    )
+
+                    database.commit()
+                    print(f"Event '{eventOffense}' for player '{eventName}' at minute '{eventTime}' added successfully.")
         else:
             print(f"No link found for match: {home_team} vs {away_team}")
 
@@ -263,7 +248,56 @@ def insertIntoPlayer(name,id):
             )
             database.commit()
 
-    
+def insertIntoMatchAppearances(date,teams,score,row):
+    if len(teams) == 2 and score:
+        home_team = teams[0]
+        away_team = teams[1]
+        match_score = score.text.strip()
+
+    # Extract the match link from the `phx-click` attribute
+        match_link_element = row.find("span", class_="hover:cursor-pointer")
+        # print(match_link_element)
+        if match_link_element and "phx-click" in match_link_element.attrs:
+            phx_click_data = match_link_element.get('phx-click')
+            try:
+                # Parse JSON-like structure in `phx-click`
+                data = json.loads(phx_click_data.replace('&quot;',""))
+                match_url = data[0][1]['href']
+                #print(match_url)
+
+            except (json.JSONDecodeError, IndexError, KeyError):
+                match_url = None
+                print("Error in finding the url")
+
+            if match_url:  #home club url
+                # Visit the match-specific page to extract event details
+                match_page = requests.get(f"https://native-stats.org{match_url}")
+                match_soup = BeautifulSoup(match_page.content, 'html.parser')
+
+                tables = match_soup.find_all("div", class_ = "space-y-1")
+                #print(tables[2])
+                home_lineup = tables[2]     #finding all the home team players
+                #print(home_lineup)
+                away_lineup = tables[3]  
+                rows = home_lineup.find_all("div",class_ = "text-sm text-gray-300 hover:text-white cursor-pointer")
+                #print("Home lineup is:",rows)
+                for row in rows:
+                    cursor.execute(
+                        "SELECT Match_ID FROM matches ORDER BY Match_ID DESC LIMIT 1"
+                    )
+                    matchID = cursor.fetchone()[0]
+                    playerName = row.text.strip()
+                    cleaned_player_name = re.sub(r"\s\(\d+\)", "", playerName)
+                    print(cleaned_player_name)
+                    cursor.execute(
+                        "SELECT Player_ID,position from player WHERE Player_Name = %s",(cleaned_player_name,)
+                    )    
+                    (id,pos) = cursor.fetchone()
+                    cursor.execute(
+                        "INSERT INTO match_appearance (Date, Match_ID, Player_ID, Position) VALUES (%s,%s,%s,%s)",
+                        (date,matchID,id,pos)
+                    )
+                    database.commit()
 
 def convertStandings(name):                     #converts the name from the standing table into the universal format fo the matches
     cursor.execute(
@@ -271,7 +305,7 @@ def convertStandings(name):                     #converts the name from the stan
         ) 
     club_name = cursor.fetchone()
     return club_name[0]
-
+    
 
 #def insertIntoPoints(clubStanding):
 #------------------------------------------------------------------ Main-------------------------------------------------------------
@@ -368,6 +402,7 @@ if past_matches_section:
             insert_into_matches(past_match,match_score)
             print("Match score is:",match_score)
             insert_into_match_events([past_home_team,past_away_team],score,row)
+            insertIntoMatchAppearances(formatted_date,[past_home_team,past_away_team],score,row)
 else:
     print("No past matches found.")
 
@@ -405,101 +440,5 @@ else:
 # Extract standings from the website
 # Close cursor and database connection after all operations
 driver.quit()
-cursor.close()
-database.close()
-
-    user="root",
-    password="******",
-    database="football_management"  # Update with your database name
-)
-cursor = database.cursor()
-
-# Define Schedule class
-class Schedule:
-    def __init__(self, home_team, away_team, match_date):
-        self.home_team = home_team
-        self.away_team = away_team
-        self.match_date = match_date
-
-# ----------------------------------------------------------Functions---------------------------------------
-
-
-# Insert match details into MySQL function
-def insert_into_match_appearances(match_event):
-    cursor.execute(
-        "INSERT INTO matches (home_team, away_team, match_date) VALUES (%s, %s, %s)",
-        (match_event.home_team, match_event.away_team, match_event.match_date)
-    )
-    database.commit()
-
-# Insert club names into MySQL
-def insertIntoClubs(clubName):
-    try:
-        cursor.execute(
-            "INSERT INTO club (Name,League_ID) VALUES (%s,%s)",
-            (clubName,1)
-        )
-        database.commit()
-    except mysql.connector.Error as err:
-        print(f"Error inserting club {clubName}: {err}")
-
-
-#------------------------------------------------------------------ Main-------------------------------------------------------------
-
-# Fetch HTML content from the website
-r = requests.get('https://native-stats.org/competition/PD/')
-soup = BeautifulSoup(r.content, 'html.parser')
-
-# Extract past matches
-print("Past Matches:")
-past_matches_section = soup.find("tbody", id="last_matches")
-if past_matches_section:
-    past_matches_rows = past_matches_section.find_all("tr")
-    for row in past_matches_rows:
-        past_date = row.find("th").text.strip() if row.find("th") else "Date not available"
-        teams = row.find_all("span", class_="hidden text-gray-200 align-middle md:inline-block")
-        if len(teams) == 2:
-            past_home_team = teams[0].text.strip()
-            past_away_team = teams[1].text.strip()
-            print(f"{past_home_team} vs {past_away_team} on {past_date}")
-            past_match = Schedule(past_home_team, past_away_team, past_date)
-            # Uncomment to enable database insertion
-            # insert_into_match_appearances(past_match)
-else:
-    print("No past matches found.")
-
-
-
-# Extract upcoming matches
-print("\nUpcoming Matches:")
-next_matches_section = soup.find("tbody", id="next_matches")
-if next_matches_section:
-    next_matches_rows = next_matches_section.find_all("tr")
-    for row in next_matches_rows:
-        next_date = row.find("th").text.strip() if row.find("th") else "Date not available"
-        teams = row.find_all("span", class_="hidden text-gray-200 align-middle md:inline-block")
-        if len(teams) == 2:
-            next_home_team = teams[0].text.strip()
-            next_away_team = teams[1].text.strip()
-            print(f"{next_home_team} vs {next_away_team} on {next_date}")
-            next_match = Schedule(next_home_team, next_away_team, next_date)
-            # Uncomment to enable database insertion
-            # insert_into_match_appearances(next_match)
-else:
-    print("No upcoming matches found.")
-
-# Extract standings from the website
-tables = soup.find_all("table", class_="table table-xs")  # gets all tables; third is the standings table
-if len(tables) > 2:
-    standings = tables[2]
-    clubs = standings.find_all("span", class_="hidden align-middle md:inline-block sm:inline-block")
-    for club in clubs:
-        club_name = club.text.strip()
-        print(club_name)
-        insertIntoClubs(club_name)
-else:
-    print("No standings table found.")
-
-# Close cursor and database connection after all operations
 cursor.close()
 database.close()
