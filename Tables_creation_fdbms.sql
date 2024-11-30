@@ -46,7 +46,7 @@ CREATE TABLE match_appearance (
     Player_ID INT NOT NULL,
     Position VARCHAR(255) DEFAULT NULL,
     Type VARCHAR(255) DEFAULT NULL,
-    player_club DEFAULT NULL,
+    player_club INT DEFAULT NULL,
     PRIMARY KEY (App_ID)
 );
 
@@ -303,7 +303,7 @@ BEGIN
         club AS pc ON p.Current_Club_ID = pc.club_id  -- Joining to get the player's club name
     WHERE
         me.match_id = input_match_id;
-    --LIMIT 5; uncomment if needed 
+    -- LIMIT 5; uncomment if needed 
 END $$
 DELIMITER ;
     
