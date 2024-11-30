@@ -25,17 +25,31 @@ public class MatchAppearance {
 
     @Column(name = "Type")
     private String Type;
+    
+    @Column(name = "player_club")
+    private String player_club;
 
     public MatchAppearance() {}
 
     
-	public MatchAppearance(String date, Match match, Player player, String position, String type) {
+	public MatchAppearance(String date, Match match, Player player, String position, String type,String Player_club) {
 		super();
 		Date = date;
 		this.match = match;
 		this.player = player;
 		Position = position;
 		Type = type;
+		player_club=Player_club;
+	}
+
+
+	public String getPlayer_club() {
+		return player_club;
+	}
+
+
+	public void setPlayer_club(String player_club) {
+		this.player_club = player_club;
 	}
 
 

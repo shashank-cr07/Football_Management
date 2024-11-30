@@ -1,0 +1,125 @@
+/* General body styling */
+body {
+    background: linear-gradient(to right, #4b79a1, #283e51); /* Gradient background */
+    font-family: Arial, sans-serif;
+    color: #fff;
+    padding: 20px;
+}
+
+/* Card styling for content containers */
+.card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table thead {
+    background-color: #35485d;
+}
+
+table th, table td {
+    padding: 12px 15px;
+    text-align: center;
+    border: 1px solid #35485d;
+}
+
+table th {
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Table rows with alternating colors */
+table tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Style for match events and transfers tables */
+#recentResultsTableBody td, #recentTransfersTableBody td, #matchEventsTableBody td {
+    color: #fff;
+}
+
+/* Buttons styling */
+button {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 8px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Modal styling */
+.modal-content {
+    background-color: #283e51;
+    color: #fff;
+    border-radius: 8px;
+}
+
+.modal-header, .modal-footer {
+    border: none;
+}
+
+/* Alerts styling */
+.alert {
+    padding: 15px;
+    background-color: #f44336; /* Red */
+    color: white;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.alert-info {
+    background-color: #2196F3;
+}
+
+.alert-success {
+    background-color: #4CAF50;
+}
+
+/* Navbar styling */
+.navbar {
+    background-color: #35485d;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.navbar a {
+    color: #fff;
+    padding: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.navbar a:hover {
+    color: #4CAF50;
+}

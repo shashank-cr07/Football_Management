@@ -1,73 +1,90 @@
 package com.example.demo.bases;
+
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "club", schema = "football_management")
 public class Club {
-	@Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "Club_ID")
-	private Integer Club_ID;
-	@Column(name = "Name")
-	private String Club_Name;
-	
-	@Column(name = "Market_value")
-	private Integer Market_value;
-	@Column(name = "League")
-	private String League;
-	@Column(name = "Available_Balance")
-	private Integer Available_Balance;
-	@Column(name = "Coach")
-	private String Coach;
-	public Club() {}
-	
-	
-	public Club(String club_Name, Integer market_value, String league, Integer available_Balance,
-			String coach) {
+    @Column(name = "Club_ID")
+    private Integer clubId;
+
+    @Column(name = "Name", nullable = false)
+    private String name;
+
+    @Column(name = "Market_value")
+    private BigDecimal marketValue;
+
+    @ManyToOne
+    @JoinColumn(name = "League_ID", referencedColumnName = "league_id", nullable = false)
+    private League leagueId;
+
+    @Column(name = "Available_Balance")
+    private BigDecimal availableBalance;
+
+    @Column(name = "Coach")
+    private String coach;
+
+    public Club() {}
+	public Club(String name, BigDecimal marketValue, League leagueId, BigDecimal availableBalance, String coach) {
 		super();
-		Club_Name = club_Name;
-		Market_value = market_value;
-		League = league;
-		Available_Balance = available_Balance;
-		Coach = coach;
+		this.name = name;
+		this.marketValue = marketValue;
+		this.leagueId = leagueId;
+		this.availableBalance = availableBalance;
+		this.coach = coach;
 	}
 
+	public Integer getClubId() {
+		return clubId;
+	}
 
-	public Integer getClub_ID() {
-		return Club_ID;
+	public void setClubId(Integer clubId) {
+		this.clubId = clubId;
 	}
-	
-	public String getClub_Name() {
-		return Club_Name;
+
+	public String getName() {
+		return name;
 	}
-	public void setClub_Name(String club_Name) {
-		Club_Name = club_Name;
+
+	public void setName(String name) {
+		this.name = name;
 	}
-	public Integer getMarket_value() {
-		return Market_value;
+
+	public BigDecimal getMarketValue() {
+		return marketValue;
 	}
-	public void setMarket_value(Integer market_value) {
-		Market_value = market_value;
+
+	public void setMarketValue(BigDecimal marketValue) {
+		this.marketValue = marketValue;
 	}
-	public String getLeague() {
-		return League;
+
+	public League getLeagueId() {
+		return leagueId;
 	}
-	public void setLeague(String league) {
-		League = league;
+
+	public void setLeagueId(League leagueId) {
+		this.leagueId = leagueId;
 	}
-	public Integer getAvailable_Balance() {
-		return Available_Balance;
+
+	public BigDecimal getAvailableBalance() {
+		return availableBalance;
 	}
-	public void setAvailable_Balance(Integer available_Balance) {
-		Available_Balance = available_Balance;
+
+	public void setAvailableBalance(BigDecimal availableBalance) {
+		this.availableBalance = availableBalance;
 	}
+
 	public String getCoach() {
-		return Coach;
+		return coach;
 	}
+
 	public void setCoach(String coach) {
-		Coach = coach;
+		this.coach = coach;
 	}
-	
-	
+
+    
 }
 

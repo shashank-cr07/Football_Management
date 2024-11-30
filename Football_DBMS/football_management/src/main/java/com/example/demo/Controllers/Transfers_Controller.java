@@ -105,4 +105,8 @@ public class Transfers_Controller {
             throw new RuntimeException("Error creating transfer", e);
         }
     }
+    @GetMapping("/transfers-club")
+    public List<Transfers> getTransfersByClub(@RequestParam(value = "club_id", required = false) Integer clubId) {
+        return transfersRepo.findTransfersByClub(clubId);
+    }
 }

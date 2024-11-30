@@ -1,76 +1,111 @@
 package com.example.demo.Controllers;
 
+import java.math.BigDecimal;
 import java.util.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.bases.Club;
+import com.example.demo.bases.League;
 import com.example.demo.Repositories.Club_Repo;
+import com.example.demo.Repositories.League_Repo;
 
 @RestController
+@RequestMapping("/Club")
 public class Club_Controller {
 
     @Autowired
-    private Club_Repo m1;
+    private Club_Repo clubRepo;
 
-    @GetMapping("/Club")
-    public List<Club> getAll() {
-        return m1.findAll();
+    @Autowired
+    private League_Repo leagueRepo;
+
+    // Get all clubs
+    @GetMapping
+    public List<Club> getAllClubs(@RequestParam(value = "league_id", required = false) Integer leagueId) {
+        if (leagueId != null) {
+            // Fetch clubs by league ID if provided
+            Optional<League> league = leagueRepo.findById(leagueId);
+            return league.map(clubRepo::findByLeagueId).orElseGet(List::of);
+        }
+        return clubRepo.findAll(); // Return all clubs if no league ID is provided
     }
 
-    @GetMapping("/Club-find/{identity}")
-    public Club getSingleClub(@PathVariable("identity") Integer id) {
-        return m1.findById(id).orElse(null);
+    // Get a club by ID
+    @GetMapping("/find")
+    public Club getClubById(@RequestParam("id") Integer id) {
+        return clubRepo.findById(id).orElse(null);
     }
 
-    @DeleteMapping("/Club-remove/{id}")
-    public boolean deleteRow(@PathVariable("id") Integer id) {
-        if (m1.findById(id).isPresent()) {
-            m1.deleteById(id);
+
+    // Delete a club by ID
+    @DeleteMapping("/remove/{id}")
+    public boolean deleteClub(@PathVariable("id") Integer id) {
+        if (clubRepo.existsById(id)) {
+            clubRepo.deleteById(id);
             return true;
         }
         return false;
     }
 
-    @PutMapping("/Club-update/{id}")
-    public Club updateClub(@PathVariable("id") Integer id, 
+    // Update an existing club by ID
+    @PutMapping("/update/{id}")
+    public Club updateClub(@PathVariable("id") Integer id,
                            @RequestBody Map<String, String> body) {
 
-        Optional<Club> currentOpt = m1.findById(id);
-        if (currentOpt.isPresent()) {
-            Club current = currentOpt.get();
+        Optional<Club> clubOpt = clubRepo.findById(id);
+        if (clubOpt.isPresent()) {
+            Club club = clubOpt.get();
 
-            current.setClub_Name(body.get("Club_Name"));  // Correct field names
-            current.setMarket_value(Integer.parseInt(body.get("Market_value")));
-            current.setLeague(body.get("League"));
-            current.setAvailable_Balance(Integer.parseInt(body.get("Available_Balance")));
-            current.setCoach(body.get("Coach"));
+            club.setName(body.get("name"));
+            club.setMarketValue(new BigDecimal(body.get("marketValue")));
 
-            m1.save(current);
-            return current;
+            // Fetch the League entity using leagueId provided in the request body
+            Integer leagueId = Integer.parseInt(body.get("leagueId"));
+            League league = leagueRepo.findById(leagueId).orElseThrow(() -> 
+                new RuntimeException("League not found with id " + leagueId)
+            );
+            club.setLeagueId(league);  // Set the League entity
+
+            club.setAvailableBalance(new BigDecimal(body.get("availableBalance")));
+            club.setCoach(body.get("coach"));
+
+            return clubRepo.save(club);
         } else {
             throw new RuntimeException("Club not found with id " + id);
         }
     }
 
-    @PostMapping("/Club-add")
-    public Club create(@RequestBody Map<String, String> body) {
+    // Create a new club
+    @PostMapping("/add")
+    public Club createClub(@RequestBody Map<String, String> body) {
         try {
-            String clubName = body.get("Club_Name");
-            Integer marketValue = Integer.parseInt(body.get("Market_value"));
-            String league = body.get("League");
-            Integer availableBalance = Integer.parseInt(body.get("Available_Balance"));
-            String coach = body.get("Coach");
+            String name = body.get("name");
+            BigDecimal marketValue = new BigDecimal(body.get("marketValue"));
 
-            Club newClub = new Club(clubName,marketValue,league,availableBalance,coach);
-            
+            // Fetch the League entity using leagueId provided in the request body
+            Integer leagueId = Integer.parseInt(body.get("leagueId"));
+            League league = leagueRepo.findById(leagueId).orElseThrow(() -> 
+                new RuntimeException("League not found with id " + leagueId)
+            );
 
-            return m1.save(newClub);
+            BigDecimal availableBalance = new BigDecimal(body.get("availableBalance"));
+            String coach = body.get("coach");
+
+            Club newClub = new Club(name, marketValue, league, availableBalance, coach);
+            return clubRepo.save(newClub);
         } catch (NumberFormatException e) {
             throw new RuntimeException("Invalid number format", e);
         } catch (Exception e) {
             throw new RuntimeException("Error creating Club", e);
         }
+    }
+    
+    @GetMapping("/get-club-id")
+    public Integer getClubId(@RequestParam("clubName") String clubName) {
+      
+        return clubRepo.findClubIdByName(clubName);
+
     }
 }

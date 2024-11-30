@@ -67,7 +67,7 @@ public class MatchAppearance_Controller {
             current.setPlayer(player);
             current.setPosition(body.get("Position"));
             current.setType(body.get("Type"));
-
+      
             return matchAppearanceRepo.save(current);
         } else {
             throw new RuntimeException("Match appearance not found with ID " + id);
@@ -90,8 +90,8 @@ public class MatchAppearance_Controller {
 
             String position = body.get("Position");
             String type = body.get("Type");
-
-            MatchAppearance newAppearance = new MatchAppearance(date, match, player, position, type);
+            String player_club = body.get("player_club");
+            MatchAppearance newAppearance = new MatchAppearance(date, match, player, position, type,player_club);
             return matchAppearanceRepo.save(newAppearance);
         } catch (NumberFormatException e) {
             throw new RuntimeException("Invalid number format", e);
@@ -99,4 +99,11 @@ public class MatchAppearance_Controller {
             throw new RuntimeException("Error creating match appearance", e);
         }
     }
+    @GetMapping("/match-appear")
+    @ResponseBody
+    public List<MatchAppearance> getMatchAppearances(@RequestParam("match_id") Integer matchId) {
+        return matchAppearanceRepo.findMatchfromId(matchId);
+    }
+
+
 }

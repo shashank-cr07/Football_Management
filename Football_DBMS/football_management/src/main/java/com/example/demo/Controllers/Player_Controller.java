@@ -24,7 +24,15 @@ public class Player_Controller {
     public List<Player> getAllPlayers() {
         return playerRepo.findAll();
     }
-
+    
+    //TO get all players from a club
+    @GetMapping("/Player-by-club")
+    public List<Player> getAllPlayers(@RequestParam(value = "club_id", required = true) Integer clubId) {
+        if (clubId != null) {
+            return playerRepo.findByClubId(clubId);
+        }
+        else return null;
+    }
     // Get a single player by ID
     @GetMapping("/Player-find/{id}")
     public Player getSinglePlayer(@PathVariable("id") Integer id) {
@@ -85,4 +93,5 @@ public class Player_Controller {
             throw new RuntimeException("Error creating player", e);
         }
     }
+    
 }

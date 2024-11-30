@@ -1,4 +1,5 @@
 package com.example.demo.bases;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -7,45 +8,59 @@ public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Match_ID")
-    private Integer Match_ID;
+    private Integer matchId;
 
     @ManyToOne
-    @JoinColumn(name = "Home_club_ID")
+    @JoinColumn(name = "Home_club_ID", nullable = false)
     private Club homeClub;
 
     @ManyToOne
-    @JoinColumn(name = "Away_club_ID")
+    @JoinColumn(name = "Away_club_ID", nullable = false)
     private Club awayClub;
 
     @Column(name = "Goals_scored")
-    private Integer Goals_scored;
+    private Integer goalsScored;
 
     @Column(name = "Goals_conceded")
-    private Integer Goals_conceded;
+    private Integer goalsConceded;
 
-    @Column(name = "Date")
-    private String Date;
+    @Column(name = "Date", nullable = false)
+    private String date;
 
+    @ManyToOne
+    @JoinColumn(name = "league_id", referencedColumnName = "league_id", nullable = false)
+    private League league;
+
+    @Column(name = "time")
+    private String time;
     public Match() {}
 
+    public Match(Club homeClub, Club awayClub, Integer goalsScored, Integer goalsConceded, String date, League league,String time) {
+        this.homeClub = homeClub;
+        this.awayClub = awayClub;
+        this.goalsScored = goalsScored;
+        this.goalsConceded = goalsConceded;
+        this.date = date;
+        this.league = league;
+        this.time=time;
+    }
     
-    
-	public Match(Club homeClub, Club awayClub, Integer goals_scored, Integer goals_conceded, String date) {
-		super();
-		this.homeClub = homeClub;
-		this.awayClub = awayClub;
-		Goals_scored = goals_scored;
-		Goals_conceded = goals_conceded;
-		Date = date;
+
+	public String getTime() {
+		return time;
 	}
 
-
-
-	public Integer getMatch_ID() {
-		return Match_ID;
+	public void setTime(String time) {
+		this.time = time;
 	}
 
-	
+	public Integer getMatchId() {
+		return matchId;
+	}
+
+	public void setMatchId(Integer matchId) {
+		this.matchId = matchId;
+	}
 
 	public Club getHomeClub() {
 		return homeClub;
@@ -63,29 +78,37 @@ public class Match {
 		this.awayClub = awayClub;
 	}
 
-	public Integer getGoals_scored() {
-		return Goals_scored;
+	public Integer getGoalsScored() {
+		return goalsScored;
 	}
 
-	public void setGoals_scored(Integer goals_scored) {
-		Goals_scored = goals_scored;
+	public void setGoalsScored(Integer goalsScored) {
+		this.goalsScored = goalsScored;
 	}
 
-	public Integer getGoals_conceded() {
-		return Goals_conceded;
+	public Integer getGoalsConceded() {
+		return goalsConceded;
 	}
 
-	public void setGoals_conceded(Integer goals_conceded) {
-		Goals_conceded = goals_conceded;
+	public void setGoalsConceded(Integer goalsConceded) {
+		this.goalsConceded = goalsConceded;
 	}
 
 	public String getDate() {
-		return Date;
+		return date;
 	}
 
 	public void setDate(String date) {
-		Date = date;
+		this.date = date;
 	}
 
-    
+	public League getLeague() {
+		return league;
+	}
+
+	public void setLeague(League league) {
+		this.league = league;
+	}
+
+   
 }

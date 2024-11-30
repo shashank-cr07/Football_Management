@@ -23,7 +23,11 @@ public class PlayerConditions_Controller {
     public List<PlayerConditions> getAllPlayerConditions() {
         return playerConditionsRepo.findAll();
     }
-
+    @GetMapping("/PlayerConditions-by-player")
+    public List<PlayerConditions> getPlayerConditionsByPlayerId(@RequestParam(value = "player_id", required = true) Integer playerId) {
+        return playerConditionsRepo.findByPlayerId(playerId);
+    }
+    
     // Get a single player condition by ID
     @GetMapping("/PlayerConditions-find/{id}")
     public PlayerConditions getPlayerConditionById(@PathVariable("id") Integer id) {
