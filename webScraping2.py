@@ -13,9 +13,9 @@ import random
 
 database = mysql.connector.connect(
     host="localhost",
-    user="root",
-    password="shambo",
-    database="football_management"  # Update with your database name
+    user="*****",
+    password="*********",
+    database="*************"  # Update with your database name
 )
 cursor = database.cursor(buffered=True)
 
