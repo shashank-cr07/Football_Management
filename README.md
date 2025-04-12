@@ -32,3 +32,6 @@ Football Web Scraper with MySQL Integration
 
     Postman (debugging)
     
+# Running Code 
+### Natvigate to Football_DBMS/football_management/src/main/resources/application.properties and set your sql password
+### Navigate to Football_DBMS/football_management/src/main/java/com/example/demo/FootballManagementApplication.java and run this file 
